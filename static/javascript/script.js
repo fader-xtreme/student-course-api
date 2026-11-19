@@ -103,7 +103,16 @@ async function loadTable() {
   }
 }
 
+function markActiveNav() {
+  const path = window.location.pathname.replace(/\/+$/, "") || "/";
+  document.querySelectorAll("nav a").forEach((a) => {
+    const href = a.getAttribute("href").replace(/\/+$/, "") || "/";
+    a.classList.toggle("active", href === path);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  markActiveNav();
   loadStats();
   loadTable();
 });
