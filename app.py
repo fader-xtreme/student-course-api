@@ -1,11 +1,3 @@
-Campus Connect - Integrated Student Enrollment and Information System
-Backend: Python + Flask + SQLite REST API
-
-Combines:
-  * Laboratory 3 - Student Course Management API (courses endpoints)
-  * Laboratory 4 - Campus Connect Student Information Portal (students,
-    enrollments, announcements, dashboard statistics)
-
 Run locally: python app.py
 Then browse: http://127.0.0.1:5000
 API base URL: http://127.0.0.1:5000/api
@@ -90,7 +82,7 @@ SELECT e.enrollment_id, e.student_id, e.course_id, e.enrollment_date, e.status,
        s.first_name || ' ' || s.last_name AS student_name,
        s.program AS program,
        c.course_code AS course_code,
-       c.course_name AS course_name
+       c.course_name AS course_name,
        c.department AS department
 FROM enrollments e
-
+"""
