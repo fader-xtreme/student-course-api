@@ -111,8 +111,150 @@ function markActiveNav() {
   });
 }
 
+// ---------- Dashboard: recent activity, announcements, dialogs ----------
+async function api(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+async function loadRecent() {
+  const body = document.getElementById("recent-body");
+  if (!body) return;
+  try {
+    const rows = (await api("/enrollments")).slice(-5).reverse();
+    body.innerHTML = "";
+    if (!rows.length) {
+      const td = body.insertRow().insertCell();
+      td.colSpan = 4;
+      td.className = "empty";
+      td.innerHTML = "<strong>No enrollment records yet</strong>Enroll a student in a course and the record will appear here.";
+      return;
+    }
+    rows.forEach((r) => {
+      const tr = body.insertRow();
+      tr.insertCell().textContent = r.student_name || "";
+      tr.insertCell().textContent = r.course_code || r.course_name || "";
+      tr.insertCell().textContent = r.enrollment_date || "";
+      const badge = document.createElement("span");
+      badge.className = `badge ${(r.status || "").toLowerCase()}`;
+      badge.textContent = r.status || "";
+      tr.insertCell().appendChild(badge);
+    });
+  } catch (err) {
+    console.error(err);
+    body.innerHTML = '<tr><td colspan="4">Could not load enrollments.</td></tr>';
+  }
+}
+
+async function loadAnnouncements() {
+  const box = document.getElementById("announcement-list");
+  if (!box) return;
+  try {
+    const rows = (await api("/announcements")).slice(0, 3);
+    box.innerHTML = "";
+    if (!rows.length) {
+      box.innerHTML = '<p class="empty"><strong>No announcements yet</strong>Posted announcements appear here.</p>';
+      return;
+    }
+    rows.forEach((a) => {
+      const item = document.createElement("div");
+      item.className = "ann-item";
+      const title = document.createElement("strong");
+      title.textContent = a.title;
+      const text = document.createElement("p");
+      text.textContent = a.content.length > 110 ? a.content.slice(0, 110) + "..." : a.content;
+      const meta = document.createElement("small");
+      meta.textContent = `${a.author} · ${a.date_posted}`;
+      item.append(title, text, meta);
+      box.appendChild(item);
+    });
+  } catch (err) {
+    console.error(err);
+    box.innerHTML = '<p class="empty">Could not load announcements.</p>';
+  }
+}
+
+async function fillEnrollSelects() {
+  const studentSel = document.getElementById("enroll-student");
+  const courseSel = document.getElementById("enroll-course");
+  if (!studentSel || !courseSel) return;
+  const [students, courses] = await Promise.all([api("/students"), api("/courses")]);
+  const fill = (sel, items, label) => {
+    sel.innerHTML = "";
+    items.forEach(([value, text]) => sel.add(new Option(text, value)));
+    if (!items.length) sel.add(new Option(label, ""));
+  };
+  fill(studentSel, students.map((s) => [s.student_id, `${s.first_name} ${s.last_name}`]), "No students yet");
+  fill(courseSel, courses.map((c) => [c.course_id, `${c.course_code} - ${c.course_name}`]), "No courses yet");
+}
+
+function refreshDashboard() {
+  loadStats();
+  loadRecent();
+  loadAnnouncements();
+}
+
+function setupDashboard() {
+  if (document.body.dataset.page !== "dashboard") return;
+
+  const liveUrl = document.getElementById("live-url");
+  if (liveUrl) liveUrl.textContent = `${window.location.origin}/api`;
+
+  const refresh = document.getElementById("refresh-btn");
+  if (refresh) refresh.addEventListener("click", refreshDashboard);
+
+  document.querySelectorAll("[data-open]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const dialog = document.getElementById(btn.dataset.open);
+      if (btn.dataset.open === "enroll-dialog") {
+        try { await fillEnrollSelects(); } catch (err) { console.error(err); }
+      }
+      dialog.showModal();
+    });
+  });
+
+  document.querySelectorAll("dialog").forEach((dialog) => {
+    dialog.querySelectorAll("[data-close]").forEach((b) =>
+      b.addEventListener("click", () => dialog.close())
+    );
+  });
+
+  const routes = {
+    "student-form": "/students",
+    "enroll-form": "/enrollments",
+    "announcement-form": "/announcements",
+  };
+
+  Object.entries(routes).forEach(([formId, path]) => {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorBox = form.querySelector(".form-error");
+      errorBox.textContent = "";
+      const payload = Object.fromEntries(new FormData(form).entries());
+      try {
+        await api(path, { method: "POST", body: JSON.stringify(payload) });
+        form.reset();
+        form.closest("dialog").close();
+        refreshDashboard();
+      } catch (err) {
+        errorBox.textContent = err.message;
+      }
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   markActiveNav();
   loadStats();
   loadTable();
+  loadRecent();
+  loadAnnouncements();
+  setupDashboard();
 });
