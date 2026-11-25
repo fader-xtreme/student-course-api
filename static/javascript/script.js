@@ -1,7 +1,7 @@
 // ---- Sidebar user account (Base44 style) ----
 // Paste at the very bottom of your existing static/javascript/script.js
 (function () {
-  const USER = { name: "Jan Rex Carisma", email: "janrex553@gmail.com" }; // change these
+  const USER = { name: "", email: "" }; // change these
 
   const css = `
     .uc-side{margin-top:auto;padding:16px 18px 18px;border-top:1px solid rgba(255,255,255,.12);
