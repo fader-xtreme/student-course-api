@@ -1,32 +1,7 @@
+// ---- Sidebar user account (Base44 style) ----
+// Paste at the very bottom of your existing static/javascript/script.js
 (function () {
-  const LOGIN_URL = "https://outrageous-campus-connect-core.base44.app/login";
-
-  const style = document.createElement("style");
-  style.textContent = `
-    .uc-side{margin-top:auto;padding:16px 18px 18px;border-top:1px solid rgba(255,255,255,.12)}
-    .uc-side button{width:100%;padding:10px;border:1px solid rgba(255,255,255,.25);
-      border-radius:10px;background:transparent;color:#fff;font-weight:600;cursor:pointer}
-    .uc-side button:hover{background:rgba(255,255,255,.12)}
-    .uc-float{position:fixed;left:0;bottom:0;width:272px;z-index:50;background:#10163f}`;
-  document.head.appendChild(style);
-
-  const box = document.createElement("div");
-  box.className = "uc-side";
-  box.innerHTML = '<button type="button">Sign out</button>';
-  box.querySelector("button").onclick = () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.replace(LOGIN_URL);
-  };
-
-  function mount() {
-    const side = document.querySelector("#sidebar, aside.sidebar, .sidebar, aside, .topbar");
-    if (side) side.appendChild(box);
-    else { box.classList.add("uc-float"); document.body.appendChild(box); }
-  }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
-  else mount();
-})();
+  const USER = { name: "Jan Rex Carisma", email: "janrex553@gmail.com" }; // change these
 
   const css = `
     .uc-side{margin-top:auto;padding:16px 18px 18px;border-top:1px solid rgba(255,255,255,.12);
